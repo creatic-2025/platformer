@@ -10,6 +10,9 @@ WINDOW_HEIGHT = 416
 WINDOW_WIDTH = 640
 WINDOW_TITLE = "POV: L'oeuf qui s'échappe du magasin"
 TILE_SCALE = 2
+PLAYER_MOVEMENT_SPEED = 3
+PLAYER_JUMP = 11
+GRAVITY = 0.5
 
 
 class GameState(enum.Enum):
@@ -22,6 +25,9 @@ class GameState(enum.Enum):
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.background_list = None
+        self.wall_list = None
+        self.coin_list = None
         self.background_color = arcade.csscolor.WHITE
         self.game_state = GameState.NOT_STARTED
         self.tile_map = None
@@ -34,29 +40,47 @@ class GameView(arcade.View):
 
     def setup(self):
         layer_options = {
-            "Platforms": {"use_spatial_hash": True}
+            "Platforms": {"use_spatial_hash": True},
+            "Coins": {"use_spatial_hash": True},
         }
 
         self.tile_map = arcade.load_tilemap("platformer_map.tmx", TILE_SCALE, layer_options)
+        self.wall_list = self.tile_map.sprite_lists["Platforms"]
+        self.coin_list = self.tile_map.sprite_lists["Coins"]
+        self.background_list = self.tile_map.sprite_lists["BackgroundLayer"]
 
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
-
+        walls = [self.wall_list]
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
-            walls=self.scene["Platforms"],
-            gravity_constant=0.5
+            walls,
+            gravity_constant=GRAVITY
         )
 
     def on_draw(self):
         self.clear()
-        self.scene.draw()
+        self.background_list.draw()
         self.player_sprite_list.draw()
+        self.wall_list.draw()
+        self.coin_list.draw()
 
     def on_key_press(self, key, key_modifiers):
-        if arcade.key.SPACE:
+        if key == arcade.key.SPACE:
             if self.game_state == GameState.NOT_STARTED:
                 self.game_state = GameState.GAME_STARTED
+                if self.physics_engine.can_jump():
+                    self.player_sprite.change_y = PLAYER_JUMP
+        if key == arcade.key.RIGHT:
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        if key == arcade.key.LEFT:
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED * -1
 
+    def on_key_release(self, key, modifiers):
+        if key == arcade.key.LEFT or key == arcade.key.RIGHT:
+            self.player_sprite.change_x = 0
+
+    def on_update(self, delta_time):
+        self.physics_engine.update()
+        print(f"{self.physics_engine.can_jump()}")
 
 
 def main():
