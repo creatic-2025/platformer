@@ -11,7 +11,7 @@ WINDOW_WIDTH = 640
 WINDOW_TITLE = "POV: L'oeuf qui s'échappe du magasin"
 TILE_SCALE = 2
 PLAYER_MOVEMENT_SPEED = 3
-PLAYER_JUMP = 11
+PLAYER_JUMP = 10
 GRAVITY = 0.5
 
 
@@ -29,13 +29,14 @@ class GameView(arcade.View):
         self.wall_list = None
         self.coin_list = None
         self.background_color = arcade.csscolor.WHITE
-        self.game_state = GameState.NOT_STARTED
+        self.game_state = GameState.GAME_STARTED
         self.tile_map = None
         self.scene = None
         self.physics_engine = None
         self.player_sprite = arcade.Sprite("main_sprite.png", 2, 20, 145)
         self.player_sprite_list = arcade.SpriteList()
         self.player_sprite_list.append(self.player_sprite)
+        self.coins_collected = 0
         self.setup()
 
     def setup(self):
@@ -64,11 +65,12 @@ class GameView(arcade.View):
         self.coin_list.draw()
 
     def on_key_press(self, key, key_modifiers):
+        if self.game_state != GameState.GAME_STARTED:
+            return
+
         if key == arcade.key.SPACE:
-            if self.game_state == GameState.NOT_STARTED:
-                self.game_state = GameState.GAME_STARTED
-                if self.physics_engine.can_jump():
-                    self.player_sprite.change_y = PLAYER_JUMP
+            if self.physics_engine.can_jump():
+                self.player_sprite.change_y = PLAYER_JUMP
         if key == arcade.key.RIGHT:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
         if key == arcade.key.LEFT:
@@ -80,7 +82,11 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         self.physics_engine.update()
-        print(f"{self.physics_engine.can_jump()}")
+        coin_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite, self.coin_list
+        )
+        for coin in coin_hit_list:
+            coin.remove_from_sprite_lists()
 
 
 def main():
