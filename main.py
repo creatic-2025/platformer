@@ -113,8 +113,7 @@ class GameView(arcade.View):
             coin.remove_from_sprite_lists()
             self.coins_counter += 1
 
-        boost_platform_check = arcade.check_for_collision_with_list(self.player_sprite, self.jump_platforms)
-        print(f"{boost_platform_check}")
+
 
 
 def main():
