@@ -25,6 +25,10 @@ class GameState(enum.Enum):
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.kill_platforms = None
+        self.jump_platforms = None
+        self.special_coin_list = None
+        self.coin_counter_text = None
         self.background_list = None
         self.wall_list = None
         self.coin_list = None
@@ -36,33 +40,47 @@ class GameView(arcade.View):
         self.player_sprite = arcade.Sprite("main_sprite.png", 2, 20, 145)
         self.player_sprite_list = arcade.SpriteList()
         self.player_sprite_list.append(self.player_sprite)
-        self.coins_collected = 0
+        self.coins_counter = 0
         self.setup()
 
     def setup(self):
         layer_options = {
             "Platforms": {"use_spatial_hash": True},
             "Coins": {"use_spatial_hash": True},
+            "SpecialCoin": {"use_spatial_hash": True},
+            "KillPlatform": {"use_spatial_hash": True},
+            "JumpPlatform": {"use_spatial_hash": True}
         }
 
         self.tile_map = arcade.load_tilemap("platformer_map.tmx", TILE_SCALE, layer_options)
         self.wall_list = self.tile_map.sprite_lists["Platforms"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
+        self.special_coin_list = self.tile_map.sprite_lists["SpecialCoin"]
+        self.kill_platforms = self.tile_map.sprite_lists["KillPlatform"]
+        self.jump_platforms = self.tile_map.sprite_lists["JumpPlatform"]
         self.background_list = self.tile_map.sprite_lists["BackgroundLayer"]
 
-        walls = [self.wall_list]
+        walls = [self.wall_list, self.jump_platforms, self.kill_platforms]
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite,
-            walls,
+            player_sprite=self.player_sprite,
+            walls=walls,
             gravity_constant=GRAVITY
         )
 
     def on_draw(self):
         self.clear()
         self.background_list.draw()
-        self.player_sprite_list.draw()
+
         self.wall_list.draw()
+        self.kill_platforms.draw()
+        self.jump_platforms.draw()
+        self.jump_platforms.draw_hit_boxes()
         self.coin_list.draw()
+        self.special_coin_list.draw()
+        self.coin_counter_text = arcade.Text(f"Coins: {self.coins_counter}", 20, 350, arcade.csscolor.
+                                             LIGHT_GOLDENROD_YELLOW, 25)
+        self.coin_counter_text.draw()
+        self.player_sprite_list.draw()
 
     def on_key_press(self, key, key_modifiers):
         if self.game_state != GameState.GAME_STARTED:
@@ -85,8 +103,18 @@ class GameView(arcade.View):
         coin_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite, self.coin_list
         )
+        special_coin_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite, self.special_coin_list
+        )
+        for coin in special_coin_hit_list:
+            coin.remove_from_sprite_lists()
+            self.coins_counter += 5
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
+            self.coins_counter += 1
+
+        boost_platform_check = arcade.check_for_collision_with_list(self.player_sprite, self.jump_platforms)
+        print(f"{boost_platform_check}")
 
 
 def main():
