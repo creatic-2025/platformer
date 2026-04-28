@@ -19,11 +19,6 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="10" name="JumpPlatformHitbox">
-  <object id="3" x="223.957" y="128.043">
-   <polygon points="0,0 16.0435,-0.0434783 16,-6.08696 0.0434783,-6.13043"/>
-  </object>
- </objectgroup>
  <layer id="9" name="JumpPlatform" width="20" height="14">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

@@ -25,6 +25,7 @@ class GameState(enum.Enum):
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.tile_map_2 = None
         self.kill_platforms = None
         self.jump_platforms = None
         self.special_coin_list = None
@@ -37,11 +38,19 @@ class GameView(arcade.View):
         self.tile_map = None
         self.scene = None
         self.physics_engine = None
+        self.is_paused = False
         self.player_sprite = arcade.Sprite("main_sprite.png", 2, 20, 145)
+        self.normal_texture = arcade.load_texture("main_sprite.png")
+        self.hit_texture = arcade.load_texture("main_sprite_die.png")
+        self.texture = self.normal_texture
         self.player_sprite_list = arcade.SpriteList()
         self.player_sprite_list.append(self.player_sprite)
         self.coins_counter = 0
         self.setup()
+        self.camera = arcade.Camera2D()
+        self.gui_camera = arcade.Camera2D()
+        self.end_of_map = 0
+        self.current_map = []
 
     def setup(self):
         layer_options = {
@@ -53,6 +62,7 @@ class GameView(arcade.View):
         }
 
         self.tile_map = arcade.load_tilemap("platformer_map.tmx", TILE_SCALE, layer_options)
+        self.tile_map_2 = arcade.load_tilemap("platformer_map_2.tmx", TILE_SCALE, layer_options)
         self.wall_list = self.tile_map.sprite_lists["Platforms"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
         self.special_coin_list = self.tile_map.sprite_lists["SpecialCoin"]
@@ -60,27 +70,39 @@ class GameView(arcade.View):
         self.jump_platforms = self.tile_map.sprite_lists["JumpPlatform"]
         self.background_list = self.tile_map.sprite_lists["BackgroundLayer"]
 
-        walls = [self.wall_list, self.jump_platforms, self.kill_platforms]
+        walls = [self.wall_list]
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             player_sprite=self.player_sprite,
             walls=walls,
             gravity_constant=GRAVITY
         )
 
+        self.camera = arcade.Camera2D()
+
+        self.gui_camera = arcade.Camera2D()
+
+        self.end_of_map = (self.tile_map.width * self.tile_map.tile_width)
+        self.end_of_map = self.tile_map.scaling
+
     def on_draw(self):
         self.clear()
+        self.camera.use()
         self.background_list.draw()
 
         self.wall_list.draw()
         self.kill_platforms.draw()
         self.jump_platforms.draw()
-        self.jump_platforms.draw_hit_boxes()
         self.coin_list.draw()
         self.special_coin_list.draw()
+
         self.coin_counter_text = arcade.Text(f"Coins: {self.coins_counter}", 20, 350, arcade.csscolor.
                                              LIGHT_GOLDENROD_YELLOW, 25)
         self.coin_counter_text.draw()
         self.player_sprite_list.draw()
+        self.gui_camera.use()
+        if self.game_state == GameState.GAME_LOSE:
+            self.player_sprite.texture = self.hit_texture
+            self.player_sprite.change_y = 20
 
     def on_key_press(self, key, key_modifiers):
         if self.game_state != GameState.GAME_STARTED:
@@ -99,7 +121,8 @@ class GameView(arcade.View):
             self.player_sprite.change_x = 0
 
     def on_update(self, delta_time):
-        self.physics_engine.update()
+        if not self.is_paused:
+            self.physics_engine.update()
         coin_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite, self.coin_list
         )
@@ -113,6 +136,22 @@ class GameView(arcade.View):
             coin.remove_from_sprite_lists()
             self.coins_counter += 1
 
+        jump_platform_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite, self.jump_platforms
+        )
+
+        for boost in jump_platform_hit_list:
+            self.player_sprite.change_y = 15
+
+        kill_platform_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite, self.kill_platforms
+        )
+
+        for kill_player in kill_platform_hit_list:
+            self.is_paused = True
+            self.game_state = GameState.GAME_LOSE
+
+        self.camera.position = self.player_sprite.position
 
 
 
