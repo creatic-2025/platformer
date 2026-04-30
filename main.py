@@ -20,11 +20,20 @@ class GameState(enum.Enum):
     GAME_STARTED = 1
     GAME_LOSE = 2
     GAME_WIN = 3
+    MAP_LOADING = 4
 
 
 class GameView(arcade.View):
+    MAP_LIST = ("platformer_map.tmx", "platformer_map_2.tmx")
+
     def __init__(self):
         super().__init__()
+        self.background_list_2 = None
+        self.jump_platforms_2 = None
+        self.kill_platforms_2 = None
+        self.special_coin_list_2 = None
+        self.coin_list_2 = None
+        self.wall_list_2 = None
         self.tile_map_2 = None
         self.kill_platforms = None
         self.jump_platforms = None
@@ -50,7 +59,7 @@ class GameView(arcade.View):
         self.camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
         self.end_of_map = 0
-        self.current_map = []
+        self.current_map = 0
 
     def setup(self):
         layer_options = {
@@ -60,15 +69,17 @@ class GameView(arcade.View):
             "KillPlatform": {"use_spatial_hash": True},
             "JumpPlatform": {"use_spatial_hash": True}
         }
-
-        self.tile_map = arcade.load_tilemap("platformer_map.tmx", TILE_SCALE, layer_options)
         self.tile_map_2 = arcade.load_tilemap("platformer_map_2.tmx", TILE_SCALE, layer_options)
+
+        self.tile_map = arcade.load_tilemap("platformer_map_1.tmx", TILE_SCALE, layer_options)
+
         self.wall_list = self.tile_map.sprite_lists["Platforms"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
         self.special_coin_list = self.tile_map.sprite_lists["SpecialCoin"]
         self.kill_platforms = self.tile_map.sprite_lists["KillPlatform"]
         self.jump_platforms = self.tile_map.sprite_lists["JumpPlatform"]
         self.background_list = self.tile_map.sprite_lists["BackgroundLayer"]
+        self.background_color = [130, 200, 229]
 
         walls = [self.wall_list]
         self.physics_engine = arcade.PhysicsEnginePlatformer(
@@ -76,13 +87,15 @@ class GameView(arcade.View):
             walls=walls,
             gravity_constant=GRAVITY
         )
+        self.end_of_map = (self.tile_map.width * self.tile_map.tile_width)
+        self.end_of_map = self.tile_map.scaling
 
         self.camera = arcade.Camera2D()
 
         self.gui_camera = arcade.Camera2D()
 
-        self.end_of_map = (self.tile_map.width * self.tile_map.tile_width)
-        self.end_of_map = self.tile_map.scaling
+    def load_map(self):
+        map_name = f"platformer_map_{GameView.MAP_LIST[self.current_map]}"
 
     def on_draw(self):
         self.clear()
@@ -152,7 +165,7 @@ class GameView(arcade.View):
             self.game_state = GameState.GAME_LOSE
 
         self.camera.position = self.player_sprite.position
-
+        self.camera.zoom = 1.25
 
 
 def main():
