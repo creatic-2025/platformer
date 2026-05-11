@@ -5,6 +5,7 @@ Un platformer avec Arcade qui utilise des tilemaps de Tiled pour créer
 
 import arcade
 import enum
+from pyglet.math import Vec2
 
 WINDOW_HEIGHT = 416
 WINDOW_WIDTH = 640
@@ -13,6 +14,8 @@ TILE_SCALE = 2
 PLAYER_MOVEMENT_SPEED = 3
 PLAYER_JUMP = 10
 GRAVITY = 0.5
+CAMERA_SPEED = 0.1
+VIEWPORT_MARGIN = 220
 
 
 class GameState(enum.Enum):
@@ -24,7 +27,6 @@ class GameState(enum.Enum):
 
 
 class GameView(arcade.View):
-    MAP_LIST = ("platformer_map.tmx", "platformer_map_2.tmx")
 
     def __init__(self):
         super().__init__()
@@ -55,11 +57,16 @@ class GameView(arcade.View):
         self.player_sprite_list = arcade.SpriteList()
         self.player_sprite_list.append(self.player_sprite)
         self.coins_counter = 0
-        self.setup()
         self.camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
         self.end_of_map = 0
-        self.current_map = 0
+        self.current_map = 1
+        self.setup()
+
+        self.camera_sprites = arcade.Camera2D(WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.camera_gui = arcade.Camera2D(WINDOW_WIDTH, WINDOW_HEIGHT)
+
+
 
     def setup(self):
         layer_options = {
@@ -69,9 +76,11 @@ class GameView(arcade.View):
             "KillPlatform": {"use_spatial_hash": True},
             "JumpPlatform": {"use_spatial_hash": True}
         }
-        self.tile_map_2 = arcade.load_tilemap("platformer_map_2.tmx", TILE_SCALE, layer_options)
+        print(dir(self))
+        map_name = f"platformer_map_{self.current_map}.tmx"
 
-        self.tile_map = arcade.load_tilemap("platformer_map_1.tmx", TILE_SCALE, layer_options)
+        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALE, layer_options)
+        print("DEBUG: map loaded")
 
         self.wall_list = self.tile_map.sprite_lists["Platforms"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
@@ -87,19 +96,15 @@ class GameView(arcade.View):
             walls=walls,
             gravity_constant=GRAVITY
         )
-        self.end_of_map = (self.tile_map.width * self.tile_map.tile_width)
-        self.end_of_map = self.tile_map.scaling
-
+        self.end_of_map = (self.tile_map.width * self.tile_map.tile_width) * TILE_SCALE
+        print(f"{self.end_of_map}")
         self.camera = arcade.Camera2D()
 
         self.gui_camera = arcade.Camera2D()
 
-    def load_map(self):
-        map_name = f"platformer_map_{GameView.MAP_LIST[self.current_map]}"
-
     def on_draw(self):
         self.clear()
-        self.camera.use()
+        self.camera_sprites.use()
         self.background_list.draw()
 
         self.wall_list.draw()
@@ -107,6 +112,8 @@ class GameView(arcade.View):
         self.jump_platforms.draw()
         self.coin_list.draw()
         self.special_coin_list.draw()
+
+        self.camera_gui.use()
 
         self.coin_counter_text = arcade.Text(f"Coins: {self.coins_counter}", 20, 350, arcade.csscolor.
                                              LIGHT_GOLDENROD_YELLOW, 25)
@@ -116,6 +123,8 @@ class GameView(arcade.View):
         if self.game_state == GameState.GAME_LOSE:
             self.player_sprite.texture = self.hit_texture
             self.player_sprite.change_y = 20
+
+
 
     def on_key_press(self, key, key_modifiers):
         if self.game_state != GameState.GAME_STARTED:
@@ -164,10 +173,28 @@ class GameView(arcade.View):
             self.is_paused = True
             self.game_state = GameState.GAME_LOSE
 
-        self.camera.position = self.player_sprite.position
-        self.camera.zoom = 1.25
+        self.scroll_to_player()
 
+    def scroll_to_player(self):
+        """
+        Scroll the window to the player.
 
+        if CAMERA_SPEED is 1, the camera will immediately move to the desired position.
+        Anything between 0 and 1 will have the camera move to the location with a smoother
+        pan.
+        """
+
+        position = Vec2(self.player_sprite.center_x - self.width / 2,
+                        self.player_sprite.center_y - self.height / 2)
+        self.camera_sprites.move_to(position, CAMERA_SPEED)
+
+    def on_resize(self, width, height):
+        """
+        Resize window
+        Handle the user grabbing the edge and resizing the window.
+        """
+        self.camera_sprites.resize(int(width), int(height))
+        self.camera_gui.resize(int(width), int(height))
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     game = GameView()
