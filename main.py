@@ -2,10 +2,10 @@
 Créer par Dorian B. Girard le 13 avril 2026.
 Un platformer avec Arcade qui utilise des tilemaps de Tiled pour créer
 """
+import time
 
 import arcade
 import enum
-from pyglet.math import Vec2
 
 WINDOW_HEIGHT = 416
 WINDOW_WIDTH = 640
@@ -63,11 +63,6 @@ class GameView(arcade.View):
         self.current_map = 1
         self.setup()
 
-        self.camera_sprites = arcade.Camera2D(WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.camera_gui = arcade.Camera2D(WINDOW_WIDTH, WINDOW_HEIGHT)
-
-
-
     def setup(self):
         layer_options = {
             "Platforms": {"use_spatial_hash": True},
@@ -98,33 +93,28 @@ class GameView(arcade.View):
         )
         self.end_of_map = (self.tile_map.width * self.tile_map.tile_width) * TILE_SCALE
         print(f"{self.end_of_map}")
-        self.camera = arcade.Camera2D()
-
-        self.gui_camera = arcade.Camera2D()
 
     def on_draw(self):
         self.clear()
-        self.camera_sprites.use()
         self.background_list.draw()
-
+        if self.player_sprite.position[0] > self.end_of_map:
+            self.current_map += 1
+            self.player_sprite.change_x = -620
+            self.player_sprite_list.draw()
+            self.setup()
         self.wall_list.draw()
         self.kill_platforms.draw()
         self.jump_platforms.draw()
         self.coin_list.draw()
         self.special_coin_list.draw()
 
-        self.camera_gui.use()
-
         self.coin_counter_text = arcade.Text(f"Coins: {self.coins_counter}", 20, 350, arcade.csscolor.
                                              LIGHT_GOLDENROD_YELLOW, 25)
         self.coin_counter_text.draw()
         self.player_sprite_list.draw()
-        self.gui_camera.use()
         if self.game_state == GameState.GAME_LOSE:
             self.player_sprite.texture = self.hit_texture
             self.player_sprite.change_y = 20
-
-
 
     def on_key_press(self, key, key_modifiers):
         if self.game_state != GameState.GAME_STARTED:
@@ -145,6 +135,7 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         if not self.is_paused:
             self.physics_engine.update()
+
         coin_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite, self.coin_list
         )
@@ -173,28 +164,7 @@ class GameView(arcade.View):
             self.is_paused = True
             self.game_state = GameState.GAME_LOSE
 
-        self.scroll_to_player()
 
-    def scroll_to_player(self):
-        """
-        Scroll the window to the player.
-
-        if CAMERA_SPEED is 1, the camera will immediately move to the desired position.
-        Anything between 0 and 1 will have the camera move to the location with a smoother
-        pan.
-        """
-
-        position = Vec2(self.player_sprite.center_x - self.width / 2,
-                        self.player_sprite.center_y - self.height / 2)
-        self.camera_sprites.move_to(position, CAMERA_SPEED)
-
-    def on_resize(self, width, height):
-        """
-        Resize window
-        Handle the user grabbing the edge and resizing the window.
-        """
-        self.camera_sprites.resize(int(width), int(height))
-        self.camera_gui.resize(int(width), int(height))
 def main():
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     game = GameView()
