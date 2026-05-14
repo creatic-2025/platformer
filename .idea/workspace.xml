@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5614dc93-cfd3-4ed4-9d64-3b62c592cdc2" name="Changes" comment="Camera wip. Scrolling is soon">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="5614dc93-cfd3-4ed4-9d64-3b62c592cdc2" name="Changes" comment="Removed camera and made a page-like transition to each map. Sprite does not load properly">
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -178,7 +177,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778515675113</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Removed camera and made a page-like transition to each map. Sprite does not load properly">
+      <option name="closed" value="true" />
+      <created>1778787715038</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1778787715038</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -186,6 +193,7 @@
     <MESSAGE value="platform map works, jump works only once, and movement works" />
     <MESSAGE value="test" />
     <MESSAGE value="Camera wip. Scrolling is soon" />
-    <option name="LAST_COMMIT_MESSAGE" value="Camera wip. Scrolling is soon" />
+    <MESSAGE value="Removed camera and made a page-like transition to each map. Sprite does not load properly" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed camera and made a page-like transition to each map. Sprite does not load properly" />
   </component>
 </project>

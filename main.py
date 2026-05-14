@@ -2,7 +2,7 @@
 Créer par Dorian B. Girard le 13 avril 2026.
 Un platformer avec Arcade qui utilise des tilemaps de Tiled pour créer
 """
-import time
+
 
 import arcade
 import enum
@@ -71,7 +71,6 @@ class GameView(arcade.View):
             "KillPlatform": {"use_spatial_hash": True},
             "JumpPlatform": {"use_spatial_hash": True}
         }
-        print(dir(self))
         map_name = f"platformer_map_{self.current_map}.tmx"
 
         self.tile_map = arcade.load_tilemap(map_name, TILE_SCALE, layer_options)
@@ -92,7 +91,6 @@ class GameView(arcade.View):
             gravity_constant=GRAVITY
         )
         self.end_of_map = (self.tile_map.width * self.tile_map.tile_width) * TILE_SCALE
-        print(f"{self.end_of_map}")
 
     def on_draw(self):
         self.clear()
@@ -100,8 +98,8 @@ class GameView(arcade.View):
         if self.player_sprite.position[0] > self.end_of_map:
             self.current_map += 1
             self.player_sprite.change_x = -620
-            self.player_sprite_list.draw()
             self.setup()
+            self.player_sprite_list.draw()
         self.wall_list.draw()
         self.kill_platforms.draw()
         self.jump_platforms.draw()
